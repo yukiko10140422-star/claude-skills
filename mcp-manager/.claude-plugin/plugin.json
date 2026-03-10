@@ -1,0 +1,5 @@
+{
+  "name": "mcp-manager",
+  "description": "MCPサーバーの統合管理スキル - 追加・削除・一覧・設定変更・推薦・更新確認",
+  "version": "1.0.0"
+}

@@ -1,0 +1,22 @@
+{
+  "name": "local",
+  "owner": {
+    "name": "k3n70"
+  },
+  "metadata": {
+    "description": "ローカルカスタムプラグイン"
+  },
+  "plugins": [
+    {
+      "name": "mcp-manager",
+      "source": "./mcp-manager",
+      "description": "MCPサーバーの統合管理スキル - 追加・削除・一覧・設定変更・推薦・更新確認",
+      "version": "1.0.0",
+      "author": {
+        "name": "k3n70"
+      },
+      "category": "development",
+      "tags": ["mcp", "management", "configuration"]
+    }
+  ]
+}
