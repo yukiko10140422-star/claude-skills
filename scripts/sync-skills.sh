@@ -5,6 +5,55 @@
 SKILLS_DIR="$HOME/.claude/plugins/marketplaces/local"
 cd "$SKILLS_DIR" || exit 0
 
+# ---- marketplace.json 自動更新 ----
+update_marketplace_json() {
+  local marketplace="$SKILLS_DIR/.claude-plugin/marketplace.json"
+  local tmpjs=$(mktemp /tmp/update-marketplace-XXXXXX.mjs)
+
+  cat > "$tmpjs" << 'NODESCRIPT'
+import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs';
+import { join } from 'path';
+
+const [marketplacePath, skillsDir] = process.argv.slice(2);
+const marketplace = JSON.parse(readFileSync(marketplacePath, 'utf8'));
+
+// プラグインディレクトリを走査
+const skipDirs = new Set(['scripts', '.claude-plugin', '.git', 'node_modules']);
+const dirs = readdirSync(skillsDir, { withFileTypes: true })
+  .filter(d => d.isDirectory() && !skipDirs.has(d.name) && !d.name.startsWith('.'));
+
+const existingPlugins = new Map(marketplace.plugins.map(p => [p.name, p]));
+const foundNames = new Set();
+
+for (const dir of dirs) {
+  foundNames.add(dir.name);
+  if (existingPlugins.has(dir.name)) continue;
+
+  // 新規プラグインを追加
+  const pluginJson = join(skillsDir, dir.name, '.claude-plugin', 'plugin.json');
+  let desc = '';
+  if (existsSync(pluginJson)) {
+    try { desc = JSON.parse(readFileSync(pluginJson, 'utf8')).description || ''; } catch {}
+  }
+  marketplace.plugins.push({
+    name: dir.name,
+    source: `./${dir.name}`,
+    description: desc
+  });
+}
+
+// 削除されたプラグインを除去
+marketplace.plugins = marketplace.plugins.filter(p => foundNames.has(p.name));
+
+writeFileSync(marketplacePath, JSON.stringify(marketplace, null, 2) + '\n');
+NODESCRIPT
+
+  local marketplace_w=$(cygpath -w "$marketplace" 2>/dev/null) || marketplace_w="$marketplace"
+  local skills_w=$(cygpath -w "$SKILLS_DIR" 2>/dev/null) || skills_w="$SKILLS_DIR"
+  node "$tmpjs" "$marketplace_w" "$skills_w" 2>/dev/null
+  rm -f "$tmpjs"
+}
+
 # ---- README.md 自動生成 ----
 generate_readme() {
   local readme="$SKILLS_DIR/README.md"
@@ -95,7 +144,8 @@ if git diff --cached --quiet; then
   exit 0  # 変更なし
 fi
 
-# README 更新
+# marketplace.json 更新 → README 更新
+update_marketplace_json
 generate_readme
 git add -A
 

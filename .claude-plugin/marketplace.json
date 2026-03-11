@@ -16,7 +16,11 @@
         "name": "k3n70"
       },
       "category": "development",
-      "tags": ["mcp", "management", "configuration"]
+      "tags": [
+        "mcp",
+        "management",
+        "configuration"
+      ]
     }
   ]
 }
